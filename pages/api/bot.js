@@ -46,6 +46,15 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: false });
     }
 
+    // Kiểm tra content-type
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('Invalid response (not JSON):', text);
+      await safeSendTelegramMessage(botToken, chatId, 'Phản hồi không hợp lệ từ hệ thống.');
+      return res.status(200).json({ ok: false });
+    }
+
     let data;
     try {
       data = await response.json();
@@ -67,11 +76,11 @@ export default async function handler(req, res) {
     ).join('\n');
 
     await safeSendTelegramMessage(botToken, chatId, reply);
-    res.status(200).json({ ok: true });
+    return res.status(200).json({ ok: true });
 
   } catch (err) {
     console.error('Unhandled error:', err.message, err.stack);
-    res.status(500).json({ error: 'Internal error' });
+    return res.status(500).json({ error: 'Internal error' });
   }
 }
 
