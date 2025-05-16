@@ -2,21 +2,14 @@ export default async function handler(req, res) {
   console.log('Request method:', req.method);
   console.log('Request body:', JSON.stringify(req.body));
 
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', ['POST']);
-    return res.status(405).end('Method Not Allowed');
-  }
-
-
-  console.log('Request method:', req.method);
-
-  // Check webhook status bằng GET
+  // Cho phép GET để check webhook trạng thái
   if (req.method === 'GET') {
     return res.status(200).json({ status: 'Webhook is running' });
   }
 
+  // Chỉ cho phép POST và GET, khác thì 405
   if (req.method !== 'POST') {
-    res.setHeader('Allow', ['POST', 'GET']);
+    res.setHeader('Allow', ['GET', 'POST']);
     return res.status(405).end('Method Not Allowed');
   }
 
@@ -59,9 +52,8 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: false });
     }
 
-    // Kiểm tra content-type
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
       const text = await response.text();
       console.error('Invalid response (not JSON):', text);
       await safeSendTelegramMessage(botToken, chatId, 'Phản hồi không hợp lệ từ hệ thống.');
@@ -97,7 +89,7 @@ export default async function handler(req, res) {
   }
 }
 
-// Hàm gửi tin nhắn với xử lý lỗi an toàn
+// Hàm gửi tin nhắn Telegram có xử lý lỗi an toàn
 async function safeSendTelegramMessage(botToken, chatId, text) {
   const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
   try {
