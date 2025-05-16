@@ -76,9 +76,12 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
-    const reply = data.result.map(r =>
-      `📶 ${r.product}: ${Number(r.price).toLocaleString('vi-VN')}đ`
+    // Tạo reply dạng câu có tiêu đề
+    const replyHeader = `Giá các gói sim tại ${areaRaw.trim()} ${daysStr} ngày là:\n`;
+    const replyList = data.result.map(r =>
+      `- ${r.product} : ${Number(r.price).toLocaleString('vi-VN')}đ`
     ).join('\n');
+    const reply = replyHeader + replyList;
 
     await safeSendTelegramMessage(botToken, chatId, reply);
     return res.status(200).json({ ok: true });
