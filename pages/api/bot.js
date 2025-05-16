@@ -1,13 +1,12 @@
 export default async function handler(req, res) {
+  console.log('--- Incoming Request ---');
   console.log('Request method:', req.method);
-  console.log('Request body:', JSON.stringify(req.body));
+  console.log('Full body from Telegram:', JSON.stringify(req.body, null, 2));
 
-  // Cho phép GET để check webhook trạng thái
   if (req.method === 'GET') {
     return res.status(200).json({ status: 'Webhook is running' });
   }
 
-  // Chỉ cho phép POST và GET, khác thì 405
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['GET', 'POST']);
     return res.status(405).end('Method Not Allowed');
@@ -24,7 +23,9 @@ export default async function handler(req, res) {
   try {
     const message = req.body.message?.text?.toLowerCase();
     const chatId = req.body.message?.chat?.id;
-    console.log('Received message:', message, 'chatId:', chatId);
+
+    console.log('Received message:', message);
+    console.log('Chat ID:', chatId);
 
     if (!message || !chatId) {
       console.warn('Invalid message or chat ID');
@@ -32,6 +33,8 @@ export default async function handler(req, res) {
     }
 
     const match = message.match(/(\d+)\s+(.+)/);
+    console.log('Regex match result:', match);
+
     if (!match) {
       await safeSendTelegramMessage(botToken, chatId, 'Vui lòng gửi định dạng: số ngày + quốc gia (VD: 5 Nhật Bản)');
       return res.status(200).json({ ok: true });
@@ -69,14 +72,13 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: false });
     }
 
-    console.log('Data from Apps Script:', data);
+    console.log('Data from Apps Script:', JSON.stringify(data, null, 2));
 
     if (!data.result || data.result.length === 0) {
       await safeSendTelegramMessage(botToken, chatId, `Không tìm thấy gói phù hợp với "${keyword}"`);
       return res.status(200).json({ ok: true });
     }
 
-    // Tạo reply dạng câu có tiêu đề
     const replyHeader = `Giá các gói sim tại ${areaRaw.trim()} ${daysStr} ngày là:\n`;
     const replyList = data.result.map(r =>
       `- ${r.product} : ${Number(r.price).toLocaleString('vi-VN')}đ`
@@ -107,4 +109,3 @@ async function safeSendTelegramMessage(botToken, chatId, text) {
     console.error('Error sending Telegram message:', err.message);
   }
 }
-
