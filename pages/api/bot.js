@@ -92,17 +92,19 @@ export default async function handler(req, res) {
   }
 }
 
-// Hàm gửi tin nhắn Telegram có xử lý lỗi an toàn
 async function safeSendTelegramMessage(botToken, chatId, text) {
   const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
   try {
-    console.log('Sending message:', text);
-    await fetch(url, {
+    console.log('Sending message:', text, 'to chatId:', chatId);
+    const resp = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: chatId, text }),
     });
+    const result = await resp.json();
+    console.log('Telegram sendMessage result:', result);
   } catch (err) {
     console.error('Error sending Telegram message:', err.message);
   }
 }
+
