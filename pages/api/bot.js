@@ -7,6 +7,19 @@ export default async function handler(req, res) {
     return res.status(405).end('Method Not Allowed');
   }
 
+
+  console.log('Request method:', req.method);
+
+  // Check webhook status bằng GET
+  if (req.method === 'GET') {
+    return res.status(200).json({ status: 'Webhook is running' });
+  }
+
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', ['POST', 'GET']);
+    return res.status(405).end('Method Not Allowed');
+  }
+
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   const webAppUrl = process.env.GOOGLE_APPS_SCRIPT_URL;
 
